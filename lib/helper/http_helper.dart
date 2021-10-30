@@ -21,7 +21,7 @@ class HttpHelper {
 
 
 
-  Future uploadMultipleImage(List multipartImageList , Function updatePercentage) async {
+  Future uploadMultipleImage(List multipartImageList , Function updatePercentage, double percentage) async {
     List<MultipartFile> multipart = <MultipartFile>[];
 
     print("uploadMultiple $multipartImageList");
@@ -52,7 +52,9 @@ class HttpHelper {
     try {
       var apiResponse = await dio.post(uploadUrl, data: formData,
           onSendProgress: (int sent, int total) {
-            percent = sent / total * 100;
+            percentage = sent / total * 100;
+            //percentage = sent / total;
+            percent = percentage;
 
         print('http progress: $percent');
         updatePercentage(percent);

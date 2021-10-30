@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_image_picker/helper/api_helper.dart';
 import 'package:multi_image_picker/resource_helper/string_helper.dart';
 import 'package:multi_image_picker/widget/text_btn.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
+
 class ImageListPage extends StatefulWidget {
   final List<File> image;
+  final double percentage;
 
-
-  const ImageListPage(this.image, {Key? key}) : super(key: key);
+  const ImageListPage(this.image, this.percentage, {Key? key})
+      : super(key: key);
 
   @override
   _ImageListPageState createState() => _ImageListPageState();
@@ -19,17 +19,14 @@ class ImageListPage extends StatefulWidget {
 
 class _ImageListPageState extends State<ImageListPage> {
   late ApiHelper apiHelper;
-  List<MultipartFile> multipartImageList = [];
-  late double _progressValue;
   late double percent;
   late Timer timer;
-  double value=0;
+  double value = 0;
 
   @override
   void initState() {
     super.initState();
     apiHelper = ApiHelper();
-    _progressValue = 0.0;
   }
 
   @override
@@ -38,7 +35,7 @@ class _ImageListPageState extends State<ImageListPage> {
       child: Scaffold(
         appBar: appBar(),
         body: Container(
-          margin: const EdgeInsets.only(top: 10),
+          margin: const EdgeInsets.all(10.0),
           child: Center(
             child: Column(
               children: [
@@ -48,7 +45,7 @@ class _ImageListPageState extends State<ImageListPage> {
                   child: GestureDetector(
                     onTap: () {
                       print("upload image");
-                      imageUpload(widget.image);
+                      imageUpload(widget.image, widget.percentage);
                     },
                     child: ButtonText(
                       alignment: Alignment.center,
@@ -84,28 +81,22 @@ class _ImageListPageState extends State<ImageListPage> {
     return ListView.builder(
       itemCount: widget.image.length,
       itemBuilder: (BuildContext context, int index) {
+        print("itemCount: ${widget.image.length}");
         return Padding(
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-               Expanded(
-                child:
-
-                /*LinearProgressIndicator(
+              Expanded(
+                child: LinearProgressIndicator(
                   backgroundColor: Colors.grey,
                   color: Colors.green,
-                  valueColor:AlwaysStoppedAnimation(Colors.red),
-                  value: ,
-                ),*/
-                LinearPercentIndicator(
-                  backgroundColor: Colors.cyanAccent,
-                  linearStrokeCap: LinearStrokeCap.butt,
-                  progressColor: Colors.red,
-                  animationDuration: 2000,
-                  percent: value,
+                  valueColor: const AlwaysStoppedAnimation(Colors.red),
+                  value: value / 100,
                 ),
               ),
-              Text(value.toStringAsFixed(2)),
+              Container(
+                  margin: const EdgeInsets.only(left: 10.0),
+                  child: Text(value.toStringAsFixed(2) + "%")),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -123,16 +114,12 @@ class _ImageListPageState extends State<ImageListPage> {
     );
   }
 
-
-  void imageUpload(List<File> image) {
-  //  updateProgress();
-
-    apiHelper.uploadImage(image,updatePercentage).then((value) {
+  void imageUpload(List<File> image, double percentage) {
+    apiHelper.uploadImage(image, updatePercentage, percentage).then((value) {
       if (value.statusCode == 200) {
-
-   //     timer.cancel();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Upload Complete")));
+        /* ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Upload Complete")));*/
+        print("image : $image");
         print("image upload success");
       } else {
         print("image upload failed");
@@ -143,58 +130,20 @@ class _ImageListPageState extends State<ImageListPage> {
   PreferredSizeWidget appBar() {
     return AppBar(
       centerTitle: true,
-      title: Row(
-        children: [
-          Text(
-            widget.image.length.toString(),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 20,
-              color: Colors.orange,
-            ),
-          ),
-        ],
-      ),
       elevation: 0,
       backgroundColor: Colors.transparent,
     );
   }
 
-  void updatePercentage(double percentage){
+  void updatePercentage(double percentage) {
     print("value==$value");
     setState(() {
-      value=percentage;
-    });
-
-  }
-  void updateProgress() {
-    const oneSec = Duration(seconds: 1);
-
-    /*  timer = Timer.periodic(oneSec, (_) {
-      setState(() {
-        _progressValue += 1;
-        print('progress value$_progressValue');
-        if (_progressValue >= 100) {
-          timer.cancel();
-        }
-      });
-    });*/
-    timer = Timer.periodic(oneSec, (Timer t) {
-      _progressValue += 0.1;
-      print("before progress $_progressValue");
-      setState(() {
-        if (_progressValue > 0.9) {
-          print(_progressValue);
-          t.cancel();
-          return;
-        }
-      });
+      value = percentage;
     });
   }
 
   @override
   void dispose() {
-    timer.cancel();
     super.dispose();
   }
 }

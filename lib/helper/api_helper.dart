@@ -12,8 +12,8 @@ class ApiHelper {
 
   final HttpHelper httpHelper = HttpHelper();
 
-  Future<ImageUploadModel> uploadImage(imageList ,  Function updatePercentage) async {
-    final result = await httpHelper.uploadMultipleImage(imageList,updatePercentage);
+  Future<ImageUploadModel> uploadImage(imageList ,  Function updatePercentage, double percentage) async {
+    final result = await httpHelper.uploadMultipleImage(imageList,updatePercentage,percentage);
     if (result == null) {
       return Future.error("Failed to upload images on server");
     }

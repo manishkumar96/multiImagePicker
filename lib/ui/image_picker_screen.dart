@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:multi_image_picker/resource_helper/linear_percentage_indicator.dart';
 import 'package:multi_image_picker/resource_helper/string_helper.dart';
 import 'package:multi_image_picker/ui/image_list_page.dart';
 import 'package:multi_image_picker/widget/text_btn.dart';
@@ -18,6 +16,7 @@ class ImagePickerScreen extends StatefulWidget {
 class _ImagePickerScreen extends State<ImagePickerScreen> {
   List<Asset> images = <Asset>[];
   List<File> imageFileList = <File>[];
+  double percentage = 0.0;
 
   @override
   void initState() {
@@ -25,10 +24,12 @@ class _ImagePickerScreen extends State<ImagePickerScreen> {
   }
 
   void getFileList() async {
-    for (int i = 0; i <= images.length; i++) {
+    imageFileList.clear();
+    for (int i = 0; i <= images.length - 1; i++) {
       var file = await getImageFileFromAssets(images[i]);
       print(file);
       imageFileList.add(file);
+      print("imageFileList: $imageFileList");
     }
   }
 
@@ -54,7 +55,7 @@ class _ImagePickerScreen extends State<ImagePickerScreen> {
           child: Column(
             children: [
               selectImages(),
-              Expanded(child: gridviewimages()),
+              Expanded(child: gridViewImages()),
             ],
           ),
         ),
@@ -63,43 +64,40 @@ class _ImagePickerScreen extends State<ImagePickerScreen> {
   }
 
   Future<void> imagesSelect() async {
-    setState(() {
-      images = <Asset>[];
-    });
-
     List<Asset> resultList = <Asset>[];
-
     try {
       resultList = await MultiImagePicker.pickImages(
-          maxImages: 10, selectedAssets: images);
+          maxImages: 100, enableCamera: true, selectedAssets: images);
     } on Exception catch (e) {
       print(e.toString());
     }
     setState(() {
-      images = resultList;
+      if (resultList.isNotEmpty) {
+        images = resultList;
+      }
       getFileList();
     });
   }
 
-  Widget gridviewimages() {
-    if (images != null) {
-      return GridView.count(
-        crossAxisCount: 3,
-        children: List.generate(
-          images.length,
-          (index) {
-            Asset asset = images[index];
-            return AssetThumb(
-              asset: asset,
-              width: 2000,
-              height: 2000,
-            );
-          },
-        ),
-      );
-    } else {
-      return Container();
-    }
+  Widget gridViewImages() {
+    return GridView.count(
+      crossAxisCount: 3,
+      padding: const EdgeInsets.all(5.0),
+      mainAxisSpacing: 10.0,
+      crossAxisSpacing: 10.0,
+      children: List.generate(
+        images.length,
+        (index) {
+          Asset asset = images[index];
+          print("gridViewLength: ${images.length}");
+          return AssetThumb(
+            asset: asset,
+            width: 2000,
+            height: 2000,
+          );
+        },
+      ),
+    );
   }
 
   Widget selectImages() {
@@ -147,9 +145,15 @@ class _ImagePickerScreen extends State<ImagePickerScreen> {
           padding: const EdgeInsets.all(10.0),
           child: GestureDetector(
               onTap: () {
-                print(images.length);
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ImageListPage(imageFileList)));
+                print("images length: ${images.length}");
+                if (images.isNotEmpty) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) =>
+                          ImageListPage(imageFileList, percentage)));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("no image selected")));
+                }
               },
               child: const Icon(
                 Icons.check,
