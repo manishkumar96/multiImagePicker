@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = "https://stripe-payments-zc.herokuapp.com";
+  static const String baseUrl = "your api";
 
-  static const String imageUpload = baseUrl + "/api/s3upload/files-upload";
+  static const String imageUpload = baseUrl + "your image api";
 }
